@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+   
+<meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+
+ <title> Yodafy </title>
+ 
+ </head>
+
+ <style type="text/css">
+    #yodafy{
+       width: 1024px;
+       height: 768px;
+    }
+    
+    #form{
+        position: absolute;
+	width: 300px;
+	height: 200px;
+        top: 40%;
+        left: 36%;
+    }
+    
+ </style>
+ 
+ <script src="lexicon.js_"></script>
+ <script src="lexer.js"></script>
+ <script src="POSTagger.js"></script>
+ <script src="yodify.js"></script>
+    
+   
+    
+ </script>
+
+ <body>
+    <div id= "form">
+        <form>
+	   <center><input type = 'text' name = 'answer' id= 'answer'></center>
+           <center><a onClick = "answerQuestion();" href="javascript:void(0);" title="Answer">Submit</a></center>
+    	</form>
+    </div>
+ </body>
+ </head>
+ </html>
