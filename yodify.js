@@ -1,3 +1,5 @@
+//by Anthony Ladson, Miguel Perez, and Michael Fox
+
 //Request yoda JSON 
 var req = new XMLHttpRequest();
 var YosonObject = {}; //store json array from request
@@ -251,7 +253,7 @@ function constructSentence(sa){
 	
 }
 
-
+//by anthony
 function outputSentence(sa)
 {
 	var s = ""
