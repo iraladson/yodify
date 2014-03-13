@@ -2,45 +2,46 @@
 <html>
 <head>
    
-<meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
 
  <title> Yodafy </title>
- 
- </head>
-
  <style type="text/css">
-    #yodafy{
-       width: 1024px;
-       height: 768px;
+  
+    #f{
+        position: absolute;
+        top: 2%;
+        left: 33%;
     }
     
-    #form{
-        position: absolute;
-	width: 300px;
-	height: 200px;
-        top: 40%;
-        left: 36%;
+    a:visited {
+    	color: white;
     }
+    
+    a:link{
+    	color: white;
+    }
+    
+    a:active {
+    	color: white;
+    }
+    
     
  </style>
  
  <script src="lexicon.js_"></script>
  <script src="lexer.js"></script>
  <script src="POSTagger.js"></script>
- <script src="yodify.js"></script>
-    
-   
-    
- </script>
+ 
+ </head>
 
  <body>
-    <div id= "form">
-        <form>
-	   <center><input type = 'text' name = 'answer' id= 'answer'></center>
-           <center><a onClick = "answerQuestion();" href="javascript:void(0);" title="Answer">Submit</a></center>
+ 	<center><canvas id="yoda"></canvas></center>
+ 	
+        
+        <form id="f">
+	   		<textarea id = "answer" placeholder="Some text in this box, type. How I would say it see." rows="40" cols="50"></textarea>
+        	<center><a onClick = "yodafy();" href="javascript:void(0);" title="Answer">Submit</a></center>
     	</form>
-    </div>
  </body>
- </head>
+ <script src="yodify.js"></script>
  </html>
