@@ -8,9 +8,11 @@
  <style type="text/css">
   
     #f{
-        position: absolute;
-        top: 2%;
-        left: 33%;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -19px;
+        margin-left: -170px;
     }
     
     a:visited {
@@ -24,6 +26,14 @@
     a:active {
     	color: white;
     }
+
+    #yoda {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        margin-top: -444px;
+        margin-left: -450px;
+    }
     
     
  </style>
@@ -35,13 +45,18 @@
  </head>
 
  <body>
- 	<center><canvas id="yoda"></canvas></center>
+ 	<canvas id="yoda"></canvas>
  	
         
-        <form id="f">
-	   		<textarea id = "answer" placeholder="Some text in this box, type. How I would say it see." rows="40" cols="50"></textarea>
-        	<center><a onClick = "yodafy();" href="javascript:void(0);" title="Answer">Submit</a></center>
-    	</form>
+        <div id="f">
+            <form>
+	   		  <textarea id = "answer" placeholder="Some text in this box, type. How I would say it see." rows="2" cols="50"></textarea>
+        	  <br>
+            <center><a onClick = "yodafy();" href="javascript:void(0);" title="Answer">Submit</a></center>
+               
+    	   </form>
+        </div>
+
  </body>
  <script src="yodify.js"></script>
  </html>

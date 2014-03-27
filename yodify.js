@@ -1,4 +1,228 @@
 //Yodafy
+/////////////////////////////
+//ON SUBMIT
+/////////////////////////////
+function yodafy(){
+
+	var answerString = "";
+	var contraction = false;
+	var input = document.getElementById('answer');
+	var text = input.value;
+
+	if(!text)
+	{
+		alert("Please enter some text!");
+		return;
+	}
+	
+	//Divide the text into sentences
+	var sentences = divideText(text);
+	
+
+	//for each sentence...
+	for(var s=0; s < sentences.length; s+=1){
+		var sentence = sentences[s];
+		var tempAnswerString = "";
+		//sentence = handleComplex(sentence);
+		//console.log(sentence);
+		//check for contractions
+		//for(var n=0; n < sentence.length; n+=1){
+			//var part = sentence[n];
+			var stringArray = [];
+			var posAnswerSentence = [];
+
+			for(var i = 0; i<sentence.split(" ").length; i+=1){
+				if(hasApostIn(sentence.split(" ")[i])){
+					contraction = true;
+					break;
+				}
+			}
+			sentence = removeApostFrom(sentence,contraction);
+		
+			buildPOS([sentence],stringArray);
+			posAnswerSentence = decideApproach(stringArray[0].specialSentence);
+			//console.log(posAnswerSentence);
+			//determineFirstWord(stringArray,posAnswerSentence);
+			//constructSentence(stringArray,posAnswerSentence);
+			tempAnswerString += convertToOSV(posAnswerSentence);
+			if( i != sentence.length-1){ tempAnswerString += " "; }
+			console.log(answerString);
+
+		//}
+		answerString += formatString(tempAnswerString);
+		if( s != sentences.length-1){ answerString += " "; }
+
+	}
+		
+	document.getElementById('answer').value = answerString;
+}
+
+
+function divideText(text){
+	var answers = [];
+	var sentence = "";
+
+	for(var i=0; i<text.length; i+=1){
+		var character = text[i];
+		sentence += character;
+		
+		if(isEnd(character)){
+			answers.push(sentence);
+			sentence = "";
+		}
+	}
+	return answers;
+}
+
+function handleComplex(answer){
+	var answers = [];
+	
+	var split = function(divider){
+		answers = answer.trim().split(divider);
+		console.log(answers);
+		for(var i=0; i<answers.length; i+=1){
+			if(i != answers.length-1){
+				answers[i] = answers[i].concat(divider);
+			}
+		}
+		return answers;
+	}
+	
+	if(answer.indexOf(", ") != -1){
+		return split(", ");
+	}
+	
+	if(answer.indexOf("and ") != -1){
+		return split("and ");
+	}
+	
+	answers.push(answer);
+	return answers
+}
+
+function decideApproach(posSentence){
+	
+	//Handle mistags of verbs
+	for(var i=0; i<posSentence.length;i+=1){
+		if(posSentence[i].type == 'V'){ break; }
+		if(i==posSentence.length-1){ return handleMistag(posSentence,0) }
+	}
+
+	//Handle questions
+	//Do...?
+	if(posSentence[0].word.toLowerCase() == 'do' && posSentence[0].type == 'V'){
+		posSentence[0].type = 'N';
+		for (var i = 0; i < posSentence.length; i+=1) {
+			if(posSentence[i].type == 'V'){ break; }
+			if(i==posSentence.length-1){ return handleMistag(posSentence,1,true)}
+		};
+	}
+
+	//Why..?
+	if(posSentence[0].word.toLowerCase() == 'why'){
+		posSentence.splice(1,1);
+		return { s : posSentence, v : [], o : [] };
+	}
+	
+	return identifySVO(posSentence);
+}
+
+function hasApostIn(word){
+	if(word.indexOf("'") != -1){ return true; }
+	
+	return false;
+}
+
+function removeApostFrom(sentence){
+	var senArray = sentence.split(" ");
+	var newSen = "";
+	for(var i=0; i<senArray.length;i+=1){
+		if(i != 0) { newSen += " "; }
+		var word = senArray[i];
+		
+		if(hasApostIn(word)){
+			if(word.indexOf("n't") != -1){
+				var s = word.split("n'");
+				newSen =  newSen + s[0] + " " + "not";
+				continue;
+			} else {
+				var s = word.split("'");
+				newSen = newSen + s[0] + " ";
+				switch(s[1]){
+					case "m" : newSen += "am";
+						break;
+					case "re" : newSen += "are";
+						break;
+					case "s" : newSen += "is";
+						break;
+					case "ve" : newSen += "have";
+						break;
+					case "d" : newSen += "did";
+						break;
+					case "ll" : newSen += "will";
+				}
+				continue;
+			}
+		}
+		newSen += word;
+	}
+	return newSen;
+}
+
+//Retag with appropriate tagging.
+function handleMistag(posSentence,start){
+	for(var i=start; i<posSentence.length;i+=1){
+		if(posSentence[i].type == 'N'){
+			posSentence[i].type = 'V';
+			break;
+		}
+	}
+	
+	return identifySVO(posSentence);	
+}
+
+//Identify Subject/Verb/Object
+
+function identifySVO(posSentence){
+	var subject = [];
+	var verb = [];
+	var object = [];
+	var index = 0;
+	console.log(posSentence);
+	var punct = isPunct(posSentence[posSentence.length-1].word);
+	
+	(function(){
+		for(var i=index;i<posSentence.length;i += 1){
+			if(posSentence[i].type != 'V'){
+				subject.push(posSentence[i]);
+			} else {
+				index = i;
+				return;
+			}
+		}
+	})();
+	
+	(function(){
+			verb.push(posSentence[index]);
+			
+			if(punct){
+				verb.push(posSentence[posSentence.length-1]);
+			}
+			index += 1;
+			return;
+	})();
+	
+	(function(){
+		for(var i=index;i<posSentence.length;i += 1){
+			if(!punct || (punct && i != posSentence.length-1)){
+				object.push(posSentence[i]);
+			}
+		}
+	})();
+
+	return { s : subject, v : verb, o : object };
+}
+
 //Educational Documentation
 //If excessive documentation is a turn off, see devYodafy.js
 //anthony ladson
@@ -138,214 +362,6 @@ function inContext(charBefore,mainChar,charAfter){
 }
 
 
-/////////////////////////////
-//ON SUBMIT
-/////////////////////////////
-function yodafy(){
-
-	var answerString = "";
-	var contraction = false;
-	var input = document.getElementById('answer');
-	var text = input.value;
-
-	if(!text)
-	{
-		alert("Please enter some text!");
-		return;
-	}
-	
-	var sentences = divideText(text);
-	
-	for(var j=0; j < sentences.length; j+=1){
-		var sentence = sentences[j];
-		var tempAnswerString = "";
-		sentence = handleComplex(sentence);
-		
-		//check for contractions
-		for(var n=0; n < sentence.length; n+=1){
-			var part = sentence[n];
-			var stringArray = [];
-			var posAnswerSentence = [];
-
-			for(var i = 0; i<part.split(" ").length; i+=1){
-				if(hasApostIn(part.split(" ")[i])){
-					contraction = true;
-					break;
-				}
-			}
-			part = removeApostFrom(part,contraction);
-		
-			buildPOS([part],stringArray);
-			posAnswerSentence = decideApproach(stringArray[0].specialSentence);
-			//console.log(posAnswerSentence);
-			//determineFirstWord(stringArray,posAnswerSentence);
-			//constructSentence(stringArray,posAnswerSentence);
-			tempAnswerString += convertToOSV(posAnswerSentence);
-			if( i != sentence.length-1){ tempAnswerString += " "; }
-			console.log(answerString);
-
-		}
-		answerString += formatString(tempAnswerString);
-		if( j != sentences.length-1){ answerString += " "; }
-
-	}
-		
-	document.getElementById('answer').value = answerString;
-}
-
-
-//NEW APPROACH
-function divideText(text){
-	var answers = [];
-	var sentence = "";
-
-	for(var i=0; i<text.length; i+=1){
-		var character = text[i];
-		sentence += character;
-		
-		if(isEnd(character)){
-			answers.push(sentence);
-			sentence = "";
-		}
-	}
-	return answers;
-}
-
-function handleComplex(answer){
-	var answers = [];
-	
-	var split = function(divider){
-		console.log(divider);
-		console.log(answer);
-			answers = answer.trim().split(divider);
-			console.log(answers);
-			for(var i=0; i<answers.length; i+=1){
-				if(i != answers.length-1){
-					answers[i] = answers[i].concat(divider);
-				}
-			}
-			return answers;
-		}
-	
-	if(answer.indexOf(",") != -1){
-		return split(",");
-	}
-	
-	if(answer.indexOf("and ") != -1){
-		return split("and ");
-	}
-	
-	answers.push(answer);
-	return answers
-}
-
-function decideApproach(posSentence){
-	//Handle mistags of verbs
-	for(var i=0; i<posSentence.length;i+=1){
-		if(posSentence[i].type == 'V'){ break; }
-		if(i==posSentence.length-1){ return handleMistag(posSentence) }
-	}
-	
-	return identifySVO(posSentence);
-}
-
-function hasApostIn(word){
-	if(word.indexOf("'") != -1){ return true; }
-	
-	return false;
-}
-
-function removeApostFrom(sentence){
-	var senArray = sentence.split(" ");
-	var newSen = "";
-	for(var i=0; i<senArray.length;i+=1){
-		if(i != 0) { newSen += " "; }
-		var word = senArray[i];
-		
-		if(hasApostIn(word)){
-			if(word.indexOf("n't") != -1){
-				var s = word.split("n'");
-				newSen =  newSen + s[0] + " " + "not";
-				continue;
-			} else {
-				var s = word.split("'");
-				newSen = newSen + s[0] + " ";
-				switch(s[1]){
-					case "m" : newSen += "am";
-						break;
-					case "re" : newSen += "are";
-						break;
-					case "s" : newSen += "is";
-						break;
-					case "ve" : newSen += "have";
-						break;
-					case "d" : newSen += "did";
-						break;
-					case "ll" : newSen += "will";
-				}
-				continue;
-			}
-		}
-		newSen += word;
-	}
-	return newSen;
-}
-
-//Retag with appropriate tagging.
-function handleMistag(posSentence){
-	for(var i=0; i<posSentence.length;i+=1){
-		if(posSentence[i].type == 'N'){
-			posSentence[i].type = 'V';
-			break;
-		}
-	}
-	
-	return identifySVO(posSentence);	
-}
-
-//Identify Subject/Verb/Object
-
-function identifySVO(posSentence){
-	var subject = [];
-	var verb = [];
-	var object = [];
-	var index = 0;
-	console.log(posSentence);
-	var punct = isPunct(posSentence[posSentence.length-1].word);
-	
-	(function(){
-		for(var i=index;i<posSentence.length;i += 1){
-			if(posSentence[i].type != 'V'){
-				subject.push(posSentence[i]);
-			} else {
-				index = i;
-				return;
-			}
-		}
-	})();
-	
-	(function(){
-			verb.push(posSentence[index]);
-			
-			if(punct){
-				verb.push(posSentence[posSentence.length-1]);
-			}
-			index += 1;
-			return;
-	})();
-	
-	(function(){
-		for(var i=index;i<posSentence.length;i += 1){
-			if(!punct || (punct && i != posSentence.length-1)){
-				object.push(posSentence[i]);
-			}
-		}
-	})();
-	
-	return { s : subject, v : verb, o : object };
-}
-
-
 /////////VISUALIZATION
 
 var yBody = new Image();
@@ -370,28 +386,3 @@ function resizeCanvas(){
 }
 
 setTimeout(resizeCanvas,200);
-
-var c = 2;
-var l = 33;
-
-function collapseTextbox(){
-	var tBox = document.getElementById('answer');
-	var form = document.getElementById('f');
-	
-	if(tBox.rows >1){ 
-		tBox.rows -= 1; 
-		form.style.top = (c+=2.2)+"%";
-	}
-	if(tBox.cols >1){
-		tBox.cols -= 1;
-		form.style.left = (l+=0.28)+"%";
-	}
-	if(tBox.rows >1 || tBox.cols >1){
-		setTimeout(collapseTextbox,100);
-	}
-	
-}
-
-
-
-
